@@ -1,21 +1,57 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from "expo-status-bar";
+import React, { useEffect, useState } from "react";
+import { Asset } from "expo-asset";
+
+import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
+
+import GetStarted from "./src/screens/GetStarted";
+import { store } from "./redux/store";
+import { Provider } from "react-redux";
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+   const [loading, setLoading] = useState(false);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+   const cacheAsync = async () => {
+      const images = [
+         require("./src/images/crello.jpeg"),
+         require("./src/images/profile.jpg"),
+      ];
+
+      const cacheImages = images.map((image) => {
+         return Asset.fromModule(image).downloadAsync();
+      });
+      return Promise.all(cacheImages);
+   };
+
+   const onload = async () => {
+      cacheAsync().then(() => {
+         setLoading(true);
+         console.log("Assets loading finished");
+      });
+   };
+
+   useEffect(() => {
+      onload();
+   }, []);
+
+   if (loading) {
+      return (
+         <Provider store={store}>
+            <GetStarted />
+         </Provider>
+      );
+   } else {
+      return (
+         <View
+            style={{
+               alignItems: "center",
+               justifyContent: "center",
+               flex: 1,
+            }}
+         >
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text>Loading...</Text>
+         </View>
+      );
+   }
+}
